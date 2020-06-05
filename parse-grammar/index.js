@@ -50,49 +50,64 @@ function isDef(str) {
 }
 
 function analyze(str, table, grammar) {
-  const arr = Array.from(str);
+  const inputArr = Array.from(str);
   const charStack = ['#'];
   const statusStack = [0];
   const descArr = ['初始状态'];
   let index = 0;
   while(1) {
-    const cur = arr[0];
+    const cur = inputArr[0];
     const topStatus = statusStack[statusStack.length - 1];
-    // const topChar = charStack[charStack.length - 1];
-    if (cur === '#') {
+    const { action, target } = table[cur][topStatus];
+    judgeAction(action, target, grammar, statusStack, charStack, inputArr);
+    print(index++, statusStack.join(), charStack.join(), inputArr.join(), descArr.join());
+  }
+}
 
-    } else {
-      console.log(topStatus, cur);
-      const { action, target } = table[cur][topStatus];
-      // console.log(action, target);
-      if (isDef(action) && isDef(target)) {
-
-
-
-        switch(action) {
-          // r 操作，按文法规约符号栈 && 弹出对应的状态栈 && 规约后的值结合当前状态再次查表
-          case 'r': {
-            
-            break;
-          }
-          // s 操作，添加状态 && 弹出当前输入字符并压入符号栈
-          case 's': {
-            statusStack.push(target);
-            descArr.push(`${action}${target}，状态${target}入栈`);
-            charStack.push(cur);
-            arr.shift();
-            break;
-          }
-          case 'acc': {
-            break;
-          }
-          default: {
-            break;
-          }
+function judgeAction(action, target, grammar, statusStack, charStack, inputArr) {
+  if (!isDef(action) || !isDef(target)) {
+    descArr.push('分析失败');
+  }
+  switch(action) {
+    // r 操作，按文法规约符号栈 && 弹出对应的状态栈 && 规约后的值结合当前状态再次查表
+    case 'r': {
+      const [value, exp] = grammar[target];
+      let i;
+      for (i=0; i<exp.length; i++) {
+        const start = charStack.join().lastIndexOf(exp[i]);
+        if (start !== -1) {
+          const sum = charStack.length - start;
+          charStack.splice(start, sum, value);
+          break;
         }
       }
+      statusStack.splice(start, sum);
+      const { action: action1, target: target1 } = table[value][topStatus];
+      judgeAction(action1, target1, grammar, statusStack, charStack, inputArr)
+      descArr.push(`${action}${target}，使用文法 ${value}->${exp[i]} 进行规约`);
+      break;
     }
-    print(index++, statusStack.join(), charStack.join(), arr.join());
+    // s 操作，添加状态 && 弹出当前输入字符并压入符号栈
+    case 's': {
+      statusStack.push(target);
+      descArr.push(`${action}${target}，状态${target}入栈`);
+      charStack.push(cur);
+      inputArr.shift();
+      break;
+    }
+    // acc 操作，分析成功
+    case 'acc': {
+      descArr.push('分析成功');
+      return;
+    }
+    // goto 操作，添加状态 && 弹出当前输入字符并压入符号栈
+    case 'goto': {
+      statusStack.push(target);
+      break;
+    }
+    default: {
+      break;
+    }
   }
 }
 
