@@ -59,7 +59,7 @@ function analyze(str, table, grammar) {
   while(1) {
     const topStatus = statusStack[statusStack.length - 1];
     const cur = inputArr[0];
-    if (!isDef(table[cur][topStatus])) {
+    if (!isDef(table[cur]) || !isDef(table[cur][topStatus])) {
       descArr.push('在分析表中找不到对应操作，分析失败');
       print(statusStack, charStack, inputArr, descArr);
       print(statusStack, charStack, inputArr, descArr);
@@ -142,7 +142,7 @@ let print = printOuter();
     if (item) {
       console.log('\x1B[31m%s\x1B[0m', `\n${item}`);
       print = printOuter();
-      analyze(item, analysisTable, gramgmarArr);
+      analyze(item, analysisTable, grammarArr);
     }
   })
 })()
